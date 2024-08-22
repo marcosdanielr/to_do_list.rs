@@ -1,28 +1,20 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+mod handlers;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+use handlers::show_tasks::show_tasks;
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+#[get("/tasks")]
+async fn show_tasks_route() -> impl Responder {
+    let tasks = show_tasks();
+
+    HttpResponse::Ok().json(tasks)
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    HttpServer::new(|| App::new().service(show_tasks_route))
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }
