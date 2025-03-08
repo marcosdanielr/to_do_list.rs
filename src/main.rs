@@ -1,30 +1,21 @@
-mod handlers;
+use crate::services::tasks_service::TasksService;
+use actix_web::{web, App, HttpServer};
+use std::sync::{Arc, Mutex};
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-
-use handlers::{create_task::create_task, show_tasks::show_tasks};
-use to_do_list::models::NewTask;
-
-#[get("/tasks")]
-async fn show_tasks_route() -> impl Responder {
-    let tasks = show_tasks();
-
-    HttpResponse::Ok().json(tasks)
-}
-
-#[post("/tasks")]
-async fn create_task_route(task: web::Json<NewTask>) -> impl Responder {
-    create_task(task.title.clone());
-
-    HttpResponse::Ok()
-}
+mod configs;
+mod controllers;
+mod models;
+mod schema;
+mod services;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let tasks_service = Arc::new(Mutex::new(TasksService::new()));
+
+    HttpServer::new(move || {
         App::new()
-            .service(show_tasks_route)
-            .service(create_task_route)
+            .app_data(web::Data::new(tasks_service.clone()))
+            .service(web::scope("/api").configure(controllers::tasks_controller::config))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

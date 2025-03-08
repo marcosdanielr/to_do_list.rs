@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::schema::tasks;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
